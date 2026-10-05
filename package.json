@@ -10,6 +10,8 @@
     "dev:worker": "pnpm --filter @rj/worker dev",
     "dev:all": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "scrape": "pnpm --filter @rj/worker scrape",
+    "test": "pnpm -r test"
   }
 }

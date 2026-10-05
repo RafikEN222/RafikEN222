@@ -15,13 +15,19 @@ export const jobs = sqliteTable(
     dedupKey: text("dedup_key").notNull(),
     title: text("title").notNull(),
     company: text("company").notNull(),
+    companySlug: text("company_slug"),
     location: text("location"),
     contractType: text("contract_type"),
     salaryText: text("salary_text"),
     description: text("description").notNull(),
     url: text("url").notNull(),
     postedAt: text("posted_at"),
+    /** Données structurées brutes de la source (JSON). */
+    structured: text("structured", { mode: "json" }),
+    /** Questions du recruteur, quand la source les expose (JSON). */
+    questions: text("questions", { mode: "json" }),
     fetchedAt: text("fetched_at").notNull(),
+    lastSeenAt: text("last_seen_at").notNull(),
     ...timestamps,
   },
   (t) => [uniqueIndex("jobs_dedup_key_idx").on(t.dedupKey)],
@@ -53,3 +59,18 @@ export const applications = sqliteTable(
   // Une seule candidature par offre : garde-fou contre les doublons.
   (t) => [uniqueIndex("applications_job_id_idx").on(t.jobId)],
 );
+
+export const pipelineRuns = sqliteTable("pipeline_runs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  kind: text("kind").notNull(), // "scrape"
+  source: text("source").notNull(),
+  scope: text("scope").notNull(), // slug d'entreprise ou "all"
+  status: text("status").notNull().default("running"), // running | success | partial | stopped | failed
+  jobsFound: integer("jobs_found").notNull().default(0),
+  jobsNew: integer("jobs_new").notNull().default(0),
+  detailsFetched: integer("details_fetched").notNull().default(0),
+  errorCount: integer("error_count").notNull().default(0),
+  errors: text("errors", { mode: "json" }).$type<string[]>().notNull().default([]),
+  startedAt: text("started_at").notNull(),
+  finishedAt: text("finished_at"),
+});

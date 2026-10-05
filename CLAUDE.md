@@ -11,8 +11,9 @@ envoie lui-même chaque candidature.
    sélectionner, réordonner, reformuler et mettre en avant l'existant. Un manque par rapport à l'offre
    se signale (`gaps`), il ne se comble pas.
 2. **Scraper lentement** : une requête à la fois par site, avec une attente aléatoire de **2 à 5 s**
-   entre deux requêtes (`politeDelay()` dans `apps/worker/src/scraper/politeness.ts`, bornes dans
-   `SCRAPE_DELAY_MS` de `@rj/core`). Respecter robots.txt et les CGU de chaque site.
+   entre deux requêtes, 3 tentatives avec backoff, arrêt immédiat du run sur 403/429. Tout accès HTTP
+   passe par `createPoliteClient()` (`apps/worker/src/scraper/http.ts`, constantes dans
+   `@rj/core/rules`). Respecter robots.txt et les CGU de chaque site.
 3. **Ne jamais postuler deux fois à la même offre.** Vérifier en base avant de préparer une
    candidature. L'index unique `applications.job_id` et `jobs.dedup_key` (entreprise + titre + lieu
    normalisés) servent de garde-fou : ne pas les contourner.
@@ -27,6 +28,17 @@ contenu. Pour Indeed : passer par le connecteur officiel (recherche + détail d'
 e-mails d'alerte, **jamais** par du scraping du site. Les identifiants d'offre renvoyés par le
 connecteur ne sont pas stables d'une session à l'autre : dédupliquer avec `dedup_key`.
 
+Procédure d'import (source `apps/worker/src/scraper/sources/indeed.ts`) :
+
+1. Avec le connecteur Indeed, `search_jobs` pour l'entreprise, puis enregistrer le champ `result`
+   **tel quel** dans `data/imports/indeed/<slug>/listing-NNN.md`.
+2. Pour chaque offre de l'entreprise **absente de la base**, `get_job_details` et enregistrer le
+   `result` tel quel dans `data/imports/indeed/<slug>/details/<Job Id>.md`. Ne jamais retoucher ces
+   fichiers à la main.
+3. `pnpm scrape --company <slug>`.
+
+Le connecteur n'expose pas les questions du recruteur (`questions` reste `null`).
+
 ## Structure (monorepo pnpm, TypeScript)
 
 - `apps/web` : dashboard Next.js (App Router) + Tailwind v4, thème sombre. Pages : Dashboard, Jobs,
@@ -40,6 +52,9 @@ connecteur ne sont pas stables d'une session à l'autre : dédupliquer avec `ded
 - `packages/core` (`@rj/core`) : types partagés, règles (`rules.ts`) et prompts Claude
   (`@rj/core/prompts`).
 - `packages/db` (`@rj/db`) : SQLite via `better-sqlite3` + Drizzle ORM. Schéma dans `src/schema.ts`.
+  Après modification du schéma : `pnpm --filter @rj/db generate`. Les migrations s'appliquent
+  automatiquement à l'ouverture (`createDb()`). Chaque run du pipeline est tracé dans
+  `pipeline_runs`.
 
 Les packages du workspace exportent directement leurs sources `.ts` (pas d'étape de build). Next les
 transpile via `transpilePackages` ; le worker les exécute via `tsx`.
@@ -52,6 +67,9 @@ pnpm dev            # dashboard sur http://localhost:3000
 pnpm dev:worker     # worker en mode watch
 pnpm dev:all        # tout en parallèle
 pnpm typecheck      # tsc sur tous les packages
+pnpm test           # tests (node:test via tsx)
+pnpm scrape --company <slug> [--limit N]   # importe les offres d'une entreprise
+pnpm scrape --all [--limit N]              # toutes les entreprises de data/imports/indeed/
 pnpm --filter @rj/db generate   # migrations Drizzle
 ```
 

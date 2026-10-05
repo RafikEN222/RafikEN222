@@ -6,11 +6,14 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "scrape": "tsx src/cli.ts scrape",
+    "test": "tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@rj/core": "workspace:*",
-    "@rj/db": "workspace:*"
+    "@rj/db": "workspace:*",
+    "drizzle-orm": "^0.45.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

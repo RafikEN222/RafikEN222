@@ -9,6 +9,7 @@ export interface Job {
   source: SourceId;
   /** Identifiant chez la source, quand il est stable. */
   externalId: string | null;
+  companySlug: string | null;
   /** Clé de déduplication : entreprise + titre + lieu normalisés. */
   dedupKey: string;
   title: string;
@@ -17,6 +18,7 @@ export interface Job {
   contractType: ContractType | null;
   salaryText: string | null;
   description: string;
+  questions: RecruiterQuestion[] | null;
   url: string;
   postedAt: string | null;
   fetchedAt: string;
@@ -64,3 +66,12 @@ export interface Profile {
   skills: string[];
   dealBreakers: string[];
 }
+
+export interface RecruiterQuestion {
+  label: string;
+  type: string | null;
+  required: boolean;
+  options: string[];
+}
+
+export type PipelineRunStatus = "running" | "success" | "partial" | "stopped" | "failed";

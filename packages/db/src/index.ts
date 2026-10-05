@@ -1,14 +1,27 @@
+import { mkdirSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import * as schema from "./schema";
 
 export { schema };
 
-export function createDb(path = process.env.DATABASE_PATH ?? "./data/recherche-job.db") {
+const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const repoRoot = resolve(packageRoot, "../..");
+
+/** Dossier des données locales (base, imports). Non versionné. */
+export const DATA_DIR = process.env.RJ_DATA_DIR ? resolve(process.env.RJ_DATA_DIR) : resolve(repoRoot, "data");
+
+export function createDb(path = process.env.DATABASE_PATH ?? resolve(DATA_DIR, "recherche-job.db")) {
+  mkdirSync(dirname(resolve(path)), { recursive: true });
   const sqlite = new Database(path);
   sqlite.pragma("journal_mode = WAL");
   sqlite.pragma("foreign_keys = ON");
-  return drizzle(sqlite, { schema });
+  const db = drizzle(sqlite, { schema });
+  migrate(db, { migrationsFolder: resolve(packageRoot, "migrations") });
+  return db;
 }
 
 export type Db = ReturnType<typeof createDb>;
