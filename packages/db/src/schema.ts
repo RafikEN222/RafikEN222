@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 const timestamps = {
   createdAt: text("created_at").notNull().default(sql`(CURRENT_TIMESTAMP)`),
@@ -17,6 +17,10 @@ export const jobs = sqliteTable(
     company: text("company").notNull(),
     companySlug: text("company_slug"),
     location: text("location"),
+    /** Ville normalisée, dérivée de `location` (filtres). */
+    city: text("city"),
+    /** Catégorie dérivée du titre (filtres), affinable plus tard par le matcher. */
+    category: text("category"),
     contractType: text("contract_type"),
     salaryText: text("salary_text"),
     description: text("description").notNull(),
@@ -30,7 +34,10 @@ export const jobs = sqliteTable(
     lastSeenAt: text("last_seen_at").notNull(),
     ...timestamps,
   },
-  (t) => [uniqueIndex("jobs_dedup_key_idx").on(t.dedupKey)],
+  (t) => [
+    uniqueIndex("jobs_dedup_key_idx").on(t.dedupKey),
+    index("jobs_posted_at_idx").on(t.postedAt),
+  ],
 );
 
 export const matches = sqliteTable("matches", {

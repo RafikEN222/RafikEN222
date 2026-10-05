@@ -7,6 +7,7 @@ import * as schema from "./schema";
 
 export { schema };
 export { getProfile, saveProfile } from "./profile";
+export * from "./jobs";
 
 /**
  * Racine du monorepo, trouvée en remontant depuis le dossier courant. On n'utilise pas

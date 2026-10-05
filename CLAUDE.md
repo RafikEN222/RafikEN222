@@ -72,6 +72,17 @@ Un seul profil (table `profile`, id = 1, pas de login). Page `/profile` :
 Les packages du workspace exportent directement leurs sources `.ts` (pas d'étape de build). Next les
 transpile via `transpilePackages` ; le worker les exécute via `tsx`.
 
+### Jobs
+
+- `/jobs` : tableau paginé (25 par page, `JOBS_PAGE_SIZE`), filtres dans l'URL (`q`, `company`,
+  `city`, `contract`, `category`, `page`). Requêtes dans `packages/db/src/jobs.ts`.
+- `/jobs/[id]` : détail (tags, description complète, questions du recruteur, lien d'origine).
+- Les requêtes indépendantes d'une page sont lancées avec `Promise.all`. `better-sqlite3` étant
+  synchrone, cela ne parallélise pas vraiment aujourd'hui ; garder ce découpage pour un futur
+  driver asynchrone, et garder chaque requête indexée et courte.
+- `jobs.city` et `jobs.category` sont dérivés à l'import (`cityFromLocation`, `categorizeJob`
+  dans `@rj/core/classify`) : règles par mots-clés du titre, affinables par le matcher.
+
 ## Commandes
 
 ```sh

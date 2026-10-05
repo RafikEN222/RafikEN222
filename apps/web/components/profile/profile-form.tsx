@@ -21,17 +21,9 @@ import {
   TextArea,
   TextField,
 } from "./fields";
+import { CONTRACT_LABELS } from "@/lib/labels";
 
 const CV_MAX_BYTES = 5 * 1024 * 1024;
-
-const CONTRACT_LABELS: Record<(typeof CONTRACT_TYPES)[number], string> = {
-  cdi: "CDI",
-  cdd: "CDD",
-  freelance: "Freelance",
-  internship: "Stage",
-  apprenticeship: "Alternance",
-  other: "Autre",
-};
 
 const REMOTE_LABELS: Record<(typeof REMOTE_OPTIONS)[number], string> = {
   none: "Pas de télétravail",

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { dedupKey, type PipelineRunStatus } from "@rj/core";
+import { categorizeJob, cityFromLocation, dedupKey, type PipelineRunStatus } from "@rj/core";
 import { type Db, schema } from "@rj/db";
 import { eq } from "drizzle-orm";
 import { StopScrapingError } from "./http";
@@ -70,14 +70,20 @@ export async function runScrape(options: ScrapeOptions): Promise<ScrapeReport> {
       for (const summary of summaries) {
         const key = dedupKey(summary);
         const existing = db
-          .select({ id: schema.jobs.id })
+          .select({ id: schema.jobs.id, title: schema.jobs.title, location: schema.jobs.location, city: schema.jobs.city, category: schema.jobs.category })
           .from(schema.jobs)
           .where(eq(schema.jobs.dedupKey, key))
           .get();
         if (existing) {
           // Déjà en base : on ne retélécharge pas le détail, on note juste qu'elle est toujours en ligne.
           db.update(schema.jobs)
-            .set({ lastSeenAt: now(), updatedAt: now() })
+            .set({
+              lastSeenAt: now(),
+              updatedAt: now(),
+              // Offres importées avant l'ajout de ces colonnes.
+              city: existing.city ?? cityFromLocation(existing.location),
+              category: existing.category ?? categorizeJob(existing.title),
+            })
             .where(eq(schema.jobs.id, existing.id))
             .run();
           continue;
@@ -111,6 +117,8 @@ export async function runScrape(options: ScrapeOptions): Promise<ScrapeReport> {
             title: detail.title,
             company: detail.company,
             location: detail.location,
+            city: cityFromLocation(detail.location),
+            category: categorizeJob(detail.title),
             contractType: detail.contractType,
             salaryText: detail.salaryText,
             description: detail.description,

@@ -73,3 +73,24 @@ describe("connecteur Indeed", () => {
     assert.equal(a, b);
   });
 });
+
+describe("classification", async () => {
+  const { categorizeJob, cityFromLocation } = await import("@rj/core");
+
+  it("catégorise d'après le titre", () => {
+    assert.equal(categorizeJob("Data Engineer PySpark - Data Factory"), "Data Engineering");
+    assert.equal(categorizeJob("Ingénieur(e) DBA / Base de données expérimenté(e)"), "Base de données");
+    assert.equal(categorizeJob("Consultant DATA / Gouvernance de données"), "Gouvernance / MDM");
+    assert.equal(categorizeJob("Consultant(e) Senior - DATA Energie & Telecoms - IDF"), "Conseil data");
+    assert.equal(categorizeJob("Stage - Ingénieur(e) Cybersécurité – Protect Data"), "Cybersécurité");
+    assert.equal(categorizeJob("Data Scientist (F/H) - Ingénieur statisticien"), "Data Science / IA");
+    assert.equal(categorizeJob("Comptable fournisseurs"), null);
+  });
+
+  it("extrait la ville du lieu", () => {
+    assert.equal(cityFromLocation("Courbevoie (92)"), "Courbevoie");
+    assert.equal(cityFromLocation("Paris 13e (75)"), "Paris");
+    assert.equal(cityFromLocation("Le Plessis-Robinson (92)"), "Le Plessis-Robinson");
+    assert.equal(cityFromLocation(null), null);
+  });
+});
