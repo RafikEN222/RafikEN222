@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "better-sqlite3": "^13.0.0",
-    "drizzle-orm": "^0.45.0"
+    "drizzle-orm": "^0.45.0",
+    "@rj/core": "workspace:*"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",

@@ -74,3 +74,14 @@ export const pipelineRuns = sqliteTable("pipeline_runs", {
   startedAt: text("started_at").notNull(),
   finishedAt: text("finished_at"),
 });
+
+/** Profil unique (id = 1) : CV structuré, préférences et réponses de candidature. */
+export const profile = sqliteTable("profile", {
+  id: integer("id").primaryKey(),
+  cv: text("cv", { mode: "json" }).notNull(),
+  preferences: text("preferences", { mode: "json" }).notNull(),
+  answers: text("answers", { mode: "json" }).notNull(),
+  /** Nom du dernier fichier CV importé (le fichier lui-même n'est pas conservé). */
+  cvFileName: text("cv_file_name"),
+  ...timestamps,
+});

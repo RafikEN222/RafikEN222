@@ -56,17 +56,6 @@ export interface Application {
   updatedAt: string;
 }
 
-export interface Profile {
-  fullName: string;
-  headline: string;
-  targetRoles: string[];
-  locations: string[];
-  remote: "no" | "hybrid" | "full" | "any";
-  minSalary: number | null;
-  skills: string[];
-  dealBreakers: string[];
-}
-
 export interface RecruiterQuestion {
   label: string;
   type: string | null;

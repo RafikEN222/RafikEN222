@@ -20,6 +20,9 @@ envoie lui-même chaque candidature.
 4. **Ne jamais cliquer sur le bouton d'envoi final** d'un formulaire de candidature. L'applier
    prépare le dossier et peut pré-remplir des champs. L'envoi est toujours fait à la main par
    l'utilisateur, qui passe ensuite la candidature en `submitted`.
+5. **Ne jamais inventer les réponses de candidature** (prétentions salariales, disponibilité,
+   mobilité, télétravail). Elles viennent uniquement de `profile.answers`, saisies par
+   l'utilisateur. Une valeur `null` se signale « à compléter », elle ne se devine pas.
 
 ### Indeed
 
@@ -49,8 +52,18 @@ Le connecteur n'expose pas les questions du recruteur (`questions` reste `null`)
   - `tailor/` : adaptation du CV
   - `applier/` : préparation des candidatures (sans envoi)
   - `scheduler/` : planification des tâches
-- `packages/core` (`@rj/core`) : types partagés, règles (`rules.ts`) et prompts Claude
-  (`@rj/core/prompts`).
+- `packages/core` (`@rj/core`) : types partagés, règles (`rules.ts`), schémas Zod du profil
+  (`profile.ts` : CV, préférences, réponses de candidature) et prompts Claude (`@rj/core/prompts`).
+
+### Profil
+
+Un seul profil (table `profile`, id = 1, pas de login). Page `/profile` :
+- Import du CV (PDF ou DOCX, 5 Mo max) → `POST /api/profile/cv` → `apps/web/lib/cv-extract.ts`
+  (Claude, sortie structurée `cvSchema`, prompt `CV_EXTRACT_SYSTEM_PROMPT`). Le PDF est envoyé tel
+  quel ; le DOCX est converti en HTML (mammoth) pour garder les puces. Rien n'est enregistré à
+  l'import.
+- Enregistrement uniquement via le bouton Enregistrer → `PUT /api/profile` (validé par
+  `profileSchema`). Pas de sauvegarde automatique.
 - `packages/db` (`@rj/db`) : SQLite via `better-sqlite3` + Drizzle ORM. Schéma dans `src/schema.ts`.
   Après modification du schéma : `pnpm --filter @rj/db generate`. Les migrations s'appliquent
   automatiquement à l'ouverture (`createDb()`). Chaque run du pipeline est tracé dans
@@ -71,9 +84,11 @@ pnpm test           # tests (node:test via tsx)
 pnpm scrape --company <slug> [--limit N]   # importe les offres d'une entreprise
 pnpm scrape --all [--limit N]              # toutes les entreprises de data/imports/indeed/
 pnpm --filter @rj/db generate   # migrations Drizzle
+pnpm --filter @rj/web extract-cv <fichier>   # extrait un CV et affiche le JSON (sans enregistrer)
 ```
 
-Configuration : copier `.env.example` en `.env` (`ANTHROPIC_API_KEY`, `DATABASE_PATH`). Les données
+Configuration : copier `.env.example` en `.env` (`ANTHROPIC_API_KEY`, `DATABASE_PATH`). Le
+dashboard Next.js lit `apps/web/.env.local` : y mettre `ANTHROPIC_API_KEY` pour l'import de CV. Les données
 locales (`data/`, `*.db`) ne sont pas versionnées.
 
 ## Conventions
